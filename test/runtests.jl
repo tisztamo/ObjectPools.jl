@@ -1,7 +1,7 @@
 using ObjectPools
 using Test, BenchmarkTools
 
-@testset "Creating objects through the allocate" begin
+@testset "Creating objects through allocate()" begin
     @test allocate(Int, 4) == 4
     @test allocate(Dict) isa Dict
     @test allocate(Dict{Int, Int}, [1 => 2])[1] == 2
@@ -19,8 +19,8 @@ end
 end
 
 function fill_pool(type, args...)
-    ds = [allocate(type, args...) for i = 1:100]
-    @test map(release, ds) == [true for i = 1:100]
+    ds = [allocate(type, args...) for i = 1:ObjectPools.MAX_POOL_SIZE]
+    @test map(release, ds) == [true for i = 1:ObjectPools.MAX_POOL_SIZE]
 end
 
 @testset "Reusing multiple objects of multiple types" begin
@@ -28,6 +28,14 @@ end
     fill_pool(UInt, 1)
     fill_pool(Float16, 1.0)
     fill_pool(Float16, 1.0)
+end
+
+@testset "Filling up the pool" begin
+    type = Dict{UInt, Int}
+    extra_obj = allocate(type)
+    ds = [allocate(type) for i = 1:ObjectPools.MAX_POOL_SIZE]
+    @test map(release, ds) == [true for i = 1:ObjectPools.MAX_POOL_SIZE]
+    @test release(extra_obj) == false
 end
 
 @testset "Benchmarks" begin
