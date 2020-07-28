@@ -4,28 +4,36 @@ export allocate, release
 
 const MAX_POOL_SIZE = 100
 
-const pools = Dict{Type, Vector}()
+const pools = IdDict{Any, Any}()
 
 function createpool(type::Type{T}) where T
-    pool = Vector{type}()
+    pool = Vector{T}()
     pools[T] = pool
     return pool
 end
 
-@generated function getpool(type::Type{T}) where T
+function getpool(type::Type{T}) where T
     if !haskey(pools, T)
         createpool(T)
     end
-    retval = pools[T]
-    return :($retval)
+    return pools[T]::Vector{T}
 end
 
-function allocate(type::Type{T}, args...)::T where T
-    pool = getpool(type)
+@generated function getpool_static(type::Type{T}) where T
+    if !haskey(pools, T)
+        createpool(T)
+    end
+    return quote
+        return $(getpool(T))
+    end
+end
+
+function allocate(type::Type{T}, args...) where T
+    pool = getpool_static(T)
     return allocate(pool, T, args...)
 end
 
-function allocate(pool, type::Type{T}, args...)::T where T
+function allocate(pool, type::Type{T}, args...) where T
     if length(pool) > 0
         return pop!(pool)
     end
@@ -33,7 +41,7 @@ function allocate(pool, type::Type{T}, args...)::T where T
 end
 
 function release(obj::T) where T
-    pool = getpool(T)
+    pool = getpool_static(T)
     return release(pool, obj)
 end
 
