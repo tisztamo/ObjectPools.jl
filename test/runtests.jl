@@ -2,9 +2,9 @@ using ObjectPools
 using Test, BenchmarkTools
 
 @testset "Creating objects through the allocate" begin
-    @test allocate(Int, 4) == 4
+    @test allocate(Int, 4) === 4
     @test allocate(Dict) isa Dict
-    @test allocate(Dict{Int, Int}, [1 => 2])[1] == 2
+    @test allocate(Dict{Int, Int}, [1 => 2])[1] === 2
 end
 
 @testset "Reusing objects" begin
