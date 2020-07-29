@@ -48,11 +48,11 @@ end
 
     @info "Acquire-Release: begin a=allocate(Dict{Int, Int}); release(a) end"
     @btime begin a=allocate(Dict{Int, Int}); release(a) end
-    
+
     @info "Acquire-Release from locally cached pool: begin pool=ObjectPools.getpool(Dict{Int, Int}); a=allocate(pool, Dict{Int, Int}); release(pool, a) end"
     @btime begin pool=ObjectPools.getpool(Dict{Int, Int}); a=allocate(pool, Dict{Int, Int}); release(pool, a) end
 
-    pool = ObjectPools.createpool(Dict{Int, Int})
+    pool = ObjectPools.getpool(Dict{Int, Int})
     @info "Acquire-Release from a constant pool: begin a=allocate(pool, Dict{Int, Int}); release(pool, a) end"
     @btime begin a=allocate($pool, Dict{Int, Int}); release($pool, a) end
 end
