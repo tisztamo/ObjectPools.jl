@@ -23,6 +23,20 @@ function fill_pool(type, args...)
     @test map(release, ds) == [true for i = 1:ObjectPools.MAX_POOL_SIZE]
 end
 
+const NUM_TYPES = 2
+
+function getvalpools()
+    for i = 1:NUM_TYPES
+        ObjectPools.getpool(Val{i})
+    end
+end
+
+function getvalpools_static()
+    for i = 1:NUM_TYPES
+        ObjectPools.getpool_static(Val{i})
+    end
+end
+
 @testset "Reusing multiple objects of multiple types" begin
     fill_pool(Dict{String, Any})
     fill_pool(UInt, 1)
@@ -55,4 +69,10 @@ end
     pool = ObjectPools.getpool(Dict{Int, Int})
     @info "Acquire-Release from a constant pool: begin a=allocate(pool, Dict{Int, Int}); release(pool, a) end"
     @btime begin a=allocate($pool, Dict{Int, Int}); release($pool, a) end
+
+    @info "getpool vs getpool_static (respectively) for $(NUM_TYPES)+ types and dynamic dispatch"
+    getvalpools()
+    getvalpools_static()
+    @btime getvalpools()
+    @btime getvalpools_static()
 end
